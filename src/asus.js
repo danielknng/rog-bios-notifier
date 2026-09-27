@@ -56,9 +56,11 @@ async function fetchJson(url) {
 }
 
 /**
- * The "BIOS" group holds every historical release, newest first.
+ * The "BIOS" group holds every historical release, newest first. Some
+ * entries have IsRelease "0" (beta or withdrawn builds ASUS still lists),
+ * so the first entry isn't necessarily the latest stable one.
  */
-function extractLatestBios(json) {
+export function extractLatestBios(json) {
   const groups = json && json.Result && json.Result.Obj;
   if (!Array.isArray(groups)) return null;
 
@@ -67,10 +69,10 @@ function extractLatestBios(json) {
     return null;
   }
 
-  return biosGroup.Files[0];
+  return biosGroup.Files.find((file) => file.IsRelease === "1") || biosGroup.Files[0];
 }
 
-function normalizeChangelog(rawDescription) {
+export function normalizeChangelog(rawDescription) {
   if (!rawDescription) return null;
 
   return rawDescription
@@ -84,7 +86,7 @@ function normalizeChangelog(rawDescription) {
 }
 
 // Some products return an absolute URL, others a path relative to ASUS' CDN.
-function normalizeDownloadUrl(url) {
+export function normalizeDownloadUrl(url) {
   if (!url) return null;
   return url.startsWith("http") ? url : "https://dlcdnets.asus.com" + url;
 }
