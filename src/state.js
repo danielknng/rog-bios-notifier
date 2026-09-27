@@ -25,3 +25,27 @@ export async function updateCheckedAtOnly(env, kvKey, previousState) {
 
   await env.STATE.put(kvKey, JSON.stringify(updated));
 }
+
+/**
+ * Loads the last error message that was already reported to Discord for
+ * this target, so a still-broken check isn't re-reported on every run.
+ */
+export async function loadStoredError(env, kvKey) {
+  return await env.STATE.get(errorKey(kvKey));
+}
+
+export async function saveStoredError(env, kvKey, message) {
+  await env.STATE.put(errorKey(kvKey), message);
+}
+
+/**
+ * Called once a check succeeds again, so the next failure (even an
+ * identical one) gets reported instead of being treated as already known.
+ */
+export async function clearStoredError(env, kvKey) {
+  await env.STATE.delete(errorKey(kvKey));
+}
+
+function errorKey(kvKey) {
+  return kvKey + "-last-error";
+}
