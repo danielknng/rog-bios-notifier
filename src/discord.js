@@ -27,17 +27,11 @@ function buildDiscordMessage(config, data) {
   const lines = [
     "​",
     "**" + (data.forceNotify ? "TEST NOTIFICATION" : "New BIOS released!") + "**",
-    "Product: " + config.productName
+    "Product: " + config.productName,
+    "Last Version: " + data.previousVersion,
+    "Current Version: " + data.currentVersion,
+    "Release date: " + (data.releaseDate || "unknown")
   ];
-
-  if (data.forceNotify) {
-    lines.push("Current version: " + data.currentVersion);
-  } else {
-    lines.push("Previous: " + data.previousVersion);
-    lines.push("New: " + data.currentVersion);
-  }
-
-  lines.push("Release date: " + (data.releaseDate || "unknown"));
 
   if (data.fileSize) {
     lines.push("File size: " + data.fileSize);
