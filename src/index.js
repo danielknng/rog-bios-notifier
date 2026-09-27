@@ -1,10 +1,13 @@
 import { getConfig, validateConfig } from "./config.js";
 import { fetchBiosInfo } from "./asus.js";
-import { sendDiscordNotification } from "./discord.js";
+import { sendDiscordNotification, sendDiscordError } from "./discord.js";
 import {
   loadStoredState,
   saveCurrentState,
-  updateCheckedAtOnly
+  updateCheckedAtOnly,
+  loadStoredError,
+  saveStoredError,
+  clearStoredError
 } from "./state.js";
 import { compareVersions, jsonResponse } from "./utils.js";
 
@@ -72,12 +75,11 @@ async function runCheck(env, options = {}) {
   for (const target of config.targets) {
     try {
       results.push(await runCheckForTarget(env, target, forceNotify, manual));
+      await clearStoredError(env, target.kvKey);
     } catch (error) {
-      results.push({
-        ok: false,
-        kvKey: target.kvKey,
-        error: error instanceof Error ? error.message : String(error)
-      });
+      const message = error instanceof Error ? error.message : String(error);
+      results.push({ ok: false, kvKey: target.kvKey, error: message });
+      await reportFailureOnce(env, target, message);
     }
   }
 
@@ -86,6 +88,24 @@ async function runCheck(env, options = {}) {
     manual,
     results
   };
+}
+
+/**
+ * Reports a check failure to Discord, but only the first time it happens,
+ * an API that stays broken for days shouldn't page every single hour.
+ */
+async function reportFailureOnce(env, target, message) {
+  try {
+    const lastError = await loadStoredError(env, target.kvKey);
+    if (lastError === message) {
+      return;
+    }
+
+    await sendDiscordError(target, message);
+    await saveStoredError(env, target.kvKey, message);
+  } catch {
+    // A broken notification path shouldn't take down the rest of the run
+  }
 }
 
 async function runCheckForTarget(env, target, forceNotify, manual) {
