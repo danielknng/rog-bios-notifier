@@ -19,33 +19,48 @@ export async function sendDiscordNotification(config, data) {
   }
 }
 
+// ROG's own site red
+const EMBED_COLOR = 0xcc000e;
+
 function buildDiscordMessage(config, data) {
   const link = data.downloadUrl || config.pageUrl;
 
-  // Discord ignores newlines ("\n") at the start of a message.
-  // We therefore have to send a Zero Width Space (U+200B).
-  const lines = [
-    "​",
-    "**" + (data.forceNotify ? "TEST NOTIFICATION" : "New BIOS released!") + "**",
-    "Product: " + config.productName,
-    "Last Version: " + data.previousVersion,
-    "Current Version: " + data.currentVersion,
-    "Release date: " + (data.releaseDate || "unknown")
+  const fields = [
+    { name: "Last Version", value: "`" + data.previousVersion + "`", inline: false },
+    { name: "Current Version", value: "`" + data.currentVersion + "`", inline: false },
+    { name: "Release date", value: "`" + (data.releaseDate || "unknown") + "`", inline: false }
   ];
 
   if (data.fileSize) {
-    lines.push("File size: " + data.fileSize);
+    fields.push({ name: "File size", value: "`" + data.fileSize + "`", inline: false });
   }
 
   if (data.sha256) {
-    lines.push("SHA-256: " + data.sha256);
+    fields.push({ name: "SHA-256", value: "`" + data.sha256 + "`", inline: false });
   }
 
   if (data.changelog) {
-    lines.push("Changelog: " + data.changelog);
+    fields.push({ name: "Changelog", value: quoteLines(data.changelog), inline: false });
   }
 
-  lines.push((data.forceNotify ? "Page: " : "Download: ") + link);
+  return {
+    embeds: [
+      {
+        author: { name: config.productName },
+        title: data.forceNotify ? "TEST NOTIFICATION" : "New BIOS released!",
+        url: link,
+        color: EMBED_COLOR,
+        fields
+      }
+    ]
+  };
+}
 
-  return { content: lines.join("\n") };
+// Discord requires "> " at the start of every line for a blockquote, without
+// this a multi-line changelog would only quote its first line.
+function quoteLines(text) {
+  return text
+    .split("\n")
+    .map((line) => "> " + line)
+    .join("\n");
 }
