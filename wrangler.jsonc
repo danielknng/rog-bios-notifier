@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "rog-bios-notifier",
+  "main": "src/index.js",
+  "compatibility_date": "2026-03-14",
+
+  "triggers": {
+    "crons": [
+      "0 * * * *"
+    ]
+  },
+
+  "kv_namespaces": [
+    {
+      "binding": "STATE",
+	  // Add a KV-Storage and paste its ID here. This one won't work!
+      "id": "49e84844abce4f91b503bbb8d1f10f9d"
+    }
+  ]
+}
