@@ -81,6 +81,9 @@ Click on Settings -> Variables and Secrets -> Add
 | /state         | Returns the current state from KV as JSON                |
 | /notify-test   | Runs a check and always sends a Discord notification     |
 
+#### Blogpost
+I wrote a small [Blogpost](https://knng.de/blog/rog-bios-notifier/) about this. Feel free to check it out! :)
+
 ## License
 
 MIT
